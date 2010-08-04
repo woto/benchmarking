@@ -4,7 +4,7 @@ require 'Benchmark/Timer.php';
 
 $timer = new Benchmark_Timer();
 
-$mysql = new mysqli("localhost", "testuser", "testpass", "test");
+$mysql = new mysqli("localhost", "root", "", "test");
 
 $points = array(1000, 10000, 100000, 500000, 1000000);
 

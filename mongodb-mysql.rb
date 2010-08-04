@@ -1,9 +1,6 @@
 require 'rubygems'
-require 'mongo'
 require 'benchmark'
 require 'mysql'
-
-include Mongo
 
 # benchmark cycle
 def cycle x
@@ -25,14 +22,14 @@ def flush_mysql mysql
     `x` int not null,
     `y` int not null,
     PRIMARY KEY (`id`)
-  )")
+  ) ENGINE=INNODB")
   mysql.query("CREATE TABLE `insert_bm`(
     `id` int unsigned not null auto_increment,
     `text` varchar(255) not null,
     `count` int not null,
     `coords_id` int unsigned not null,
     PRIMARY KEY (`id`)
-  )")
+  ) ENGINE=INNODB")
   # empty init entries
   mysql.query("INSERT insert_bm_coords(x,y) VALUES(0, 0)")
   mysql.query("INSERT insert_bm(text, count, coords_id) VALUES('', 0, #{mysql.insert_id()})")
@@ -45,8 +42,7 @@ def flush_mongo mongo_cnn
   mongo
 end
 
-mysql = Mysql.new('localhost', 'testuser', 'testpass', 'test')
-mongo_cnn = Connection.new.db("ruby_db")
+mysql = Mysql.new('localhost', 'root', '', 'test')
 
 # do benchmarking
 Benchmark.bm {|x|
@@ -54,18 +50,11 @@ Benchmark.bm {|x|
 
   points.each{|c|
     flush_mysql mysql
-    mongo = flush_mongo(mongo_cnn)
     
     x.report("mysql #{c.to_s} :") {
       cycle(c){|doc|
         mysql.query("INSERT insert_bm_coords(x,y) VALUES(#{doc["coords"]["x"]}, #{doc["coords"]["y"]})")
         mysql.query("INSERT insert_bm(text, count, coords_id) VALUES('#{doc["text"]}', #{doc["count"]}, #{mysql.insert_id()})")
-      }
-    }
-
-    x.report("mongo #{c.to_s} :") {
-      cycle(c){|doc|
-        mongo.insert(doc)
       }
     }
   }
